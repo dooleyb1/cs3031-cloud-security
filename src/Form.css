@@ -1,0 +1,20 @@
+.form {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: calc(10px + 2vmin);
+  margin-top: 2.5%;
+  color: white;
+}
+
+
+.demo-form {
+	width: 40vh;
+	margin: auto;
+  text-align: center;
+}
+
+.invalid-username {
+  color: #4DD0E1;
+  font-size: 16px;
+}
