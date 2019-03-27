@@ -20,6 +20,13 @@ const providers = {
 
 class App extends Component {
 
+  constructor(props){
+
+    super(props);
+
+    this.handleCreateGroup = this.handleCreateGroup.bind(this);
+  }
+
   state = {
     username: "",
     isUploading: false,
@@ -27,6 +34,9 @@ class App extends Component {
     avatarURL: "",
     showCreateGroup: false,
     justSubmitted: false,
+    groupName: "",
+    showMyGroups: false,
+    groups: null,
   };
 
   handleUploadStart = () => this.setState({ isUploading: true, progress: 0 });
@@ -54,12 +64,55 @@ class App extends Component {
     }.bind(this),5000);  // wait 5 seconds, then reset to false
   };
 
-  createGroup = () => {
+  toggleCreateGroup = () => {
     this.setState({ showCreateGroup: true })
   }
 
-  handleChange = (event) => {
-    this.setState({value: event.target.value});
+  toggleShowMyGroups = () => {
+
+    const db = firebase.firestore();
+
+    // Create a reference to the groups collection
+    var groupsRef = db.collection("groups");
+    var myGroups = [];
+
+    // Create a query against the collection.
+    var query = groupsRef.where("members", "array-contains", this.props.user.uid).get()
+    .then((snapShot) => {
+      snapShot.forEach((doc) => {
+        myGroups.push(doc.id);
+      });
+    }).catch((error) => console.log(error.message));
+
+
+
+    this.setState({
+      groups: myGroups,
+      showMyGroups: true
+    })
+  }
+
+  handleCreateGroup = (groupName) => {
+    const db = firebase.firestore();
+
+    var membersArray = [];
+
+    membersArray.push(this.props.user.uid);
+
+    db.settings({
+      timestampsInSnapshots: true
+    });
+
+    const groupsRef = db.collection('groups').add({
+      group_name: groupName,
+      members: membersArray
+    });
+
+    this.setState({showCreateGroup: false});
+  }
+
+  handleGroupNameChange = (event) => {
+    this.setState({groupName: event.target.value});
   }
 
   handleSubmit = (event) => {
@@ -89,7 +142,35 @@ class App extends Component {
           }
           {
             user
-            ? <div>
+            ? <div className="app-container">
+            {
+              this.state.showCreateGroup
+                  ? <div className="form">
+                      <div className="panel panel-default"></div>
+                      <div className={`form-group`}>
+                        <input type="text" required className="form-control" name="username"
+                          placeholder="Group Name"
+                          onChange={this.handleGroupNameChange}/>
+                      </div>
+                      <button onClick={() => {this.handleCreateGroup(this.state.groupName)}} type="submit" className="btn btn-primary">Create!</button>
+                      <div className="panel panel-default"></div>
+                    </div>
+                  : <div></div>
+              }
+              {
+                this.state.showMyGroups
+                    ? <div className="form">
+                        <div className="panel panel-default"></div>
+                        <div className={`form-group`}>
+                          {this.state.groups.map(group => (
+                            <p key={group}>hello</p>
+                          ))}
+                        </div>
+                        <button onClick={() => {this.setState({showMyGroups: false})}} type="submit" className="btn btn-primary">Hide My Groups!</button>
+                        <div className="panel panel-default"></div>
+                      </div>
+                    : <div></div>
+                }
                 <label className="btn btn-primary">
                   Upload File to Secure Drive
                   <FileUploader
@@ -102,6 +183,9 @@ class App extends Component {
                     onProgress={this.handleProgress}
                     />
                 </label>
+                <button onClick={this.toggleCreateGroup} className="btn custom-btn btn-primary">Create Group</button>
+                <button onClick={this.toggleShowMyGroups} className="btn custom-btn btn-primary">Show My Groups</button>
+                <button onClick={signOut} className="btn custom-btn btn-primary">Sign Out</button>
               </div>
             : <div className="button">
                 <button onClick={signInWithGoogle} className="btn btn-primary">Sign in With Google</button>
