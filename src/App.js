@@ -36,7 +36,7 @@ class App extends Component {
     justSubmitted: false,
     groupName: "",
     showMyGroups: false,
-    groups: null,
+    groups: ["Loading..."],
   };
 
   handleUploadStart = () => this.setState({ isUploading: true, progress: 0 });
@@ -82,14 +82,13 @@ class App extends Component {
       snapShot.forEach((doc) => {
         myGroups.push(doc.id);
       });
+
+      this.setState({
+        groups: myGroups,
+        showMyGroups: true
+      })
+
     }).catch((error) => console.log(error.message));
-
-
-
-    this.setState({
-      groups: myGroups,
-      showMyGroups: true
-    })
   }
 
   handleCreateGroup = (groupName) => {
@@ -128,6 +127,10 @@ class App extends Component {
       signInWithGoogle,
     } = this.props;
 
+    const groups = this.state.groups.map((group) =>
+      <li>{group}</li>
+    );
+
     return (
       <div className="app">
         <img src={ require('./images/gh2.png') } className="app-logo" alt="logo" />
@@ -162,9 +165,13 @@ class App extends Component {
                     ? <div className="form">
                         <div className="panel panel-default"></div>
                         <div className={`form-group`}>
-                          {this.state.groups.map(group => (
-                            <p key={group}>hello</p>
-                          ))}
+                          {
+                            this.state.groups
+                            ? <ul>
+                              {groups}
+                              </ul>
+                            : <p>Loading groups...</p>
+                          }
                         </div>
                         <button onClick={() => {this.setState({showMyGroups: false})}} type="submit" className="btn btn-primary">Hide My Groups!</button>
                         <div className="panel panel-default"></div>
