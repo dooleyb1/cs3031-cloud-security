@@ -1,0 +1,14 @@
+.container {
+  display: flex;
+  flex-direction: row;
+  height: 200px;
+}
+
+.center-col {
+  flex: 1;
+  overflow-y: scroll;
+}
+
+li {
+  text-align: left;
+}
