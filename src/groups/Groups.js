@@ -15,7 +15,7 @@ class Groups extends Component {
 
     this.state = {
       loading: true,
-      newGroupName: '',
+      newGroupName: 'Enter name of new group',
     };
 
     this.textInput = React.createRef();
@@ -44,7 +44,7 @@ class Groups extends Component {
           "group_name": groupData.group_name,
           "members": groupData.members
         });
-        
+
         return;
       })
 
@@ -66,13 +66,24 @@ class Groups extends Component {
     const db = firebase.firestore();
     var groupsRef = db.collection("groups");
 
-    groupsRef.add({
-      groupName: this.state.newGroupName,
-      members: [],
-    });
+    var newGroup = {
+      "group_name": this.state.newGroupName,
+      "members": [],
+    }
 
-    this.setState({groupName: ''})
+    // Push new group to firestore
+    groupsRef.add(newGroup);
 
+    // Update state with new groups
+    var groups = this.state.groups;
+    groups.push(newGroup);
+
+    this.setState({
+      newGroupName: 'Enter name of new group',
+      groups: groups,
+    })
+
+    return;
   }
 
   render() {
@@ -86,7 +97,7 @@ class Groups extends Component {
             : <div>
                 <InputGroup className="mb-3">
                   <FormControl
-                    placeholder="Enter name of new group"
+                    placeholder={this.state.newGroupName}
                     ref={this.textInput}
                     type="text"
                     onChange={() => this.handleChange()}/>
@@ -100,7 +111,7 @@ class Groups extends Component {
                   </InputGroup.Append>
                 </InputGroup>
                 <ul>
-                  {this.state.groups.map((group, i) => (<li key={group}>{group.group_name}</li>))}
+                  {this.state.groups.map((group, i) => (<li key={group.group_name}>{group.group_name}</li>))}
                 </ul>
               </div>
           }
