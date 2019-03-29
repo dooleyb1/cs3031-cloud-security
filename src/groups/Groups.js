@@ -8,6 +8,8 @@ import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
 import Button from 'react-bootstrap/Button';
 
+import GroupCreateModal from './GroupCreateModal';
+
 class Groups extends Component {
 
   constructor(props) {
@@ -16,6 +18,7 @@ class Groups extends Component {
     this.state = {
       loading: true,
       newGroupName: 'Enter name of new group',
+      modalShow: false,
     };
 
     this.textInput = React.createRef();
@@ -83,10 +86,14 @@ class Groups extends Component {
       groups: groups,
     })
 
+    // Set modal
+    this.setState({ modalShow: true })
     return;
   }
 
   render() {
+
+    let modalClose = () => this.setState({ modalShow: false });
 
     return (
       <div className="container">
@@ -113,6 +120,10 @@ class Groups extends Component {
                 <ul>
                   {this.state.groups.map((group, i) => (<li key={group.group_name}>{group.group_name}</li>))}
                 </ul>
+                <GroupCreateModal
+                  show={this.state.modalShow}
+                  onHide={modalClose}
+                  />
               </div>
           }
         </div>
