@@ -4,6 +4,10 @@ import "./Groups.css";
 import * as firebase from 'firebase/app';
 import 'firebase/firestore';
 
+import InputGroup from 'react-bootstrap/InputGroup';
+import FormControl from 'react-bootstrap/FormControl';
+import Button from 'react-bootstrap/Button';
+
 class Groups extends Component {
 
   constructor(props) {
@@ -11,7 +15,11 @@ class Groups extends Component {
 
     this.state = {
       loading: true,
+      newGroupName: '',
     };
+
+    this.textInput = React.createRef();
+    this.handleCreateGroup = this.handleCreateGroup.bind(this);
   }
 
   // Fetch groups here
@@ -24,11 +32,21 @@ class Groups extends Component {
     var myGroups = [];
 
     // Create a query against the collection.
-    var query = groupsRef.get()
+    groupsRef.get()
     .then((snapShot) => {
-      snapShot.forEach((doc) => {
-        myGroups.push(doc.id);
-      });
+      snapShot.docs.map((group) => {
+
+        // Extract data for given group
+        var groupData = group.data();
+        console.log(groupData);
+
+        myGroups.push({
+          "group_name": groupData.group_name,
+          "members": groupData.members
+        });
+        
+        return;
+      })
 
       this.setState({
         groups: myGroups,
@@ -36,6 +54,25 @@ class Groups extends Component {
       })
 
     }).catch((error) => console.log(error.message));
+  }
+
+  handleChange() {
+     const value = this.textInput.current.value
+     this.setState({newGroupName: value})
+  }
+
+  handleCreateGroup() {
+
+    const db = firebase.firestore();
+    var groupsRef = db.collection("groups");
+
+    groupsRef.add({
+      groupName: this.state.newGroupName,
+      members: [],
+    });
+
+    this.setState({groupName: ''})
+
   }
 
   render() {
@@ -46,9 +83,26 @@ class Groups extends Component {
           {
             this.state.loading
             ? <p>Loading...</p>
-            : <ul>
-                {this.state.groups.map((group, i) => (<li key={`{group}`}>{group}</li>))}
-              </ul>
+            : <div>
+                <InputGroup className="mb-3">
+                  <FormControl
+                    placeholder="Enter name of new group"
+                    ref={this.textInput}
+                    type="text"
+                    onChange={() => this.handleChange()}/>
+                  <InputGroup.Append>
+                    <Button
+                      variant="primary"
+                      onClick={this.handleCreateGroup}
+                    >
+                      Create Group
+                    </Button>
+                  </InputGroup.Append>
+                </InputGroup>
+                <ul>
+                  {this.state.groups.map((group, i) => (<li key={group}>{group.group_name}</li>))}
+                </ul>
+              </div>
           }
         </div>
       </div>

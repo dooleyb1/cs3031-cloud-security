@@ -24,20 +24,17 @@ class Users extends Component {
     var users = [];
 
     // Create a query against the collection.
-    var query = usersRef.get()
+    usersRef.get()
     .then((snapShot) => {
-      snapShot.docs.map(user => {
+      snapShot.docs.map((user) => {
 
         // Extract data for given user
         var userData = user.data();
 
-        // Create user object from response
-        var user = {
+        users.push({
           "name": userData.name,
           "uid": userData.uid
-        }
-
-        users.push(user);
+        });
       })
 
       console.log(users);
