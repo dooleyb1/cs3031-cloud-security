@@ -13,6 +13,12 @@
   font-size: 18px;
 }
 
+.accordion {
+  margin-top: 10px;
+  margin-left: 10px;
+  width: 90%;
+}
+
 li {
   text-align: left;
 }
