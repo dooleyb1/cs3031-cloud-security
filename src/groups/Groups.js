@@ -1,14 +1,16 @@
 import React, { Component } from "react";
 import "./Groups.css";
 
-import * as firebase from 'firebase/app';
-import 'firebase/firestore';
-
+import TodoList from './TodoList';
+import CreateGroupForm from './CreateGroupForm';
 import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
 import Button from 'react-bootstrap/Button';
 
 import GroupCreateModal from './GroupCreateModal';
+
+import * as firebase from 'firebase/app';
+import 'firebase/firestore';
 
 class Groups extends Component {
 
@@ -17,16 +19,26 @@ class Groups extends Component {
 
     this.state = {
       loading: true,
-      newGroupName: 'Enter name of new group',
       modalShow: false,
     };
 
-    this.textInput = React.createRef();
-    this.handleCreateGroup = this.handleCreateGroup.bind(this);
+    this.generateId = this.generateId.bind(this);
+    this.handleNodeRemoval = this.handleNodeRemoval.bind(this);
+    this.handleGroupCreate = this.handleGroupCreate.bind(this);
+    this.fetchGroups = this.fetchGroups.bind(this);
   }
 
-  // Fetch groups here
   componentDidMount(){
+
+    this.fetchGroups()
+  }
+
+  fetchGroups(){
+
+    // Set state to loading
+    this.setState({
+      loading: true
+    })
 
     const db = firebase.firestore();
 
@@ -41,9 +53,10 @@ class Groups extends Component {
 
         // Extract data for given group
         var groupData = group.data();
-        console.log(groupData);
+        var groupId = group.id;
 
         myGroups.push({
+          "id": groupId,
           "group_name": groupData.group_name,
           "members": groupData.members
         });
@@ -59,23 +72,60 @@ class Groups extends Component {
     }).catch((error) => console.log(error.message));
   }
 
-  handleChange() {
-     const value = this.textInput.current.value
-     this.setState({newGroupName: value})
+  deleteGroup(groupId){
+
+    // Set state to loading
+    this.setState({
+      loading: true
+    })
+
+    const db = firebase.firestore();
+
+    // Delete given document
+    db.collection("groups").doc(groupId).delete()
+    .then(() => {
+      console.log("Document successfully deleted!");
+    }).catch((error) => {
+      console.error("Error removing document: ", error);
+    })
+
+    this.fetchGroups();
   }
 
-  handleCreateGroup() {
+	generateId(){
+		return Math.floor(Math.random()*90000) + 10000;
+	}
+
+	handleNodeRemoval(groupId){
+		var groups = this.state.groups;
+
+		groups = groups.filter(function (el) {
+			return el.id !== groupId;
+		});
+
+
+		this.deleteGroup(groupId);
+		return;
+	}
+
+	handleGroupCreate(task){
+		var data = this.state.data;
+		var id = this.generateId().toString();
+
+		data = data.concat([{id, task}]);
+		this.setState({data});
 
     const db = firebase.firestore();
     var groupsRef = db.collection("groups");
 
     var newGroup = {
-      "group_name": this.state.newGroupName,
+      "group_name": task,
       "members": [],
     }
 
     // Push new group to firestore
-    groupsRef.add(newGroup);
+    // groupsRef.add(newGroup);
+    console.log(newGroup)
 
     // Update state with new groups
     var groups = this.state.groups;
@@ -89,7 +139,7 @@ class Groups extends Component {
     // Set modal
     this.setState({ modalShow: true })
     return;
-  }
+	}
 
   render() {
 
@@ -102,24 +152,9 @@ class Groups extends Component {
             this.state.loading
             ? <p>Loading...</p>
             : <div>
-                <InputGroup className="mb-3">
-                  <FormControl
-                    placeholder={this.state.newGroupName}
-                    ref={this.textInput}
-                    type="text"
-                    onChange={() => this.handleChange()}/>
-                  <InputGroup.Append>
-                    <Button
-                      variant="primary"
-                      onClick={this.handleCreateGroup}
-                    >
-                      Create Group
-                    </Button>
-                  </InputGroup.Append>
-                </InputGroup>
-                <ul>
-                  {this.state.groups.map((group, i) => (<li key={group.group_name}>{group.group_name}</li>))}
-                </ul>
+                <TodoList groups={this.state.groups} removeNode={this.handleNodeRemoval}/>
+                <br/>
+                <CreateGroupForm handleGroupCreate={this.handleGroupCreate} />
                 <GroupCreateModal
                   show={this.state.modalShow}
                   onHide={modalClose}

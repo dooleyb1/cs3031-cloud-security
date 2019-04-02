@@ -9,6 +9,10 @@
   overflow-y: scroll;
 }
 
+.bla {
+  font-size: 18px;
+}
+
 li {
   text-align: left;
 }
