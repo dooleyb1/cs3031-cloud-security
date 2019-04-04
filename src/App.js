@@ -15,6 +15,8 @@ import * as firebase from 'firebase/app';
 import 'firebase/auth';
 import firebaseConfig from './firebaseConfig';
 
+import * as crypto from 'crypto';
+
 const firebaseApp = firebase.initializeApp(firebaseConfig);
 const firebaseAppAuth = firebaseApp.auth();
 const providers = {
@@ -34,6 +36,15 @@ class App extends Component {
     }
 
     this.toggleButton = this.toggleButton.bind(this);
+  }
+
+  componentDidMount(){
+    const hash = crypto.createHash("sha256");
+    hash.update("mySup3rC00lP4ssWord");
+
+    const KEY = hash.digest();
+
+    console.log(KEY)
   }
 
   toggleButton(buttonName){

@@ -3,6 +3,11 @@ import Dropzone from "../dropzone/Dropzone";
 import "./Upload.css";
 import Progress from "../progress/Progress";
 
+import * as firebase from 'firebase/app';
+import 'firebase/storage';
+
+var CryptoJS = require("crypto-js");
+
 class Upload extends Component {
   constructor(props) {
     super(props);
@@ -17,23 +22,79 @@ class Upload extends Component {
     this.uploadFiles = this.uploadFiles.bind(this);
     this.sendRequest = this.sendRequest.bind(this);
     this.renderActions = this.renderActions.bind(this);
+    this.encrypt = this.encrypt.bind(this);
+    this.decrypt = this.decrypt.bind(this);
   }
 
-  onFilesAdded(files) {
-    this.setState(prevState => ({
-      files: prevState.files.concat(files)
-    }));
+  async encrypt(file){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        var encrypted = CryptoJS.AES.encrypt(e.target.result, 'password');
+        resolve('data:application/octet-stream,' + encrypted);
+      };
+
+        reader.readAsDataURL(file);
+    });
+  }
+
+  async decrypt(file){
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+
+      var decrypted = CryptoJS.AES.decrypt(e.target.result, 'password').toString(CryptoJS.enc.Latin1);
+
+      if(!/^data:/.test(decrypted)){
+          alert("Invalid pass phrase or file! Please try again.");
+          return false;
+      }
+
+      // Handle file download here
+      let a = document.createElement('a');
+      a.href = decrypted;
+      a.download = file.name.replace('.encrypted','');
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    reader.readAsText(file);
+  }
+
+  async onFilesAdded(files) {
+
+    // Encrypt each file //TODO
+    this.encrypt(files[0])
+    .then((encryptedFile) => {
+
+      // Create new object to house file
+      var encryptedFile = {
+        name: files[0].name,
+        encryptionData: encryptedFile
+      };
+
+      console.log(encryptedFile);
+
+      // Update state with new encrypted file
+      this.setState(prevState => ({
+        files: prevState.files.concat(encryptedFile)
+      }));
+    })
   }
 
   async uploadFiles() {
     this.setState({ uploadProgress: {}, uploading: true });
     const promises = [];
+
     this.state.files.forEach(file => {
       promises.push(this.sendRequest(file));
     });
+
     try {
       await Promise.all(promises);
-
+      console.log('Promises resolved');
       this.setState({ successfullUploaded: true, uploading: false });
     } catch (e) {
       // Not Production ready! Do some error handling here instead...
@@ -43,38 +104,26 @@ class Upload extends Component {
 
   sendRequest(file) {
     return new Promise((resolve, reject) => {
-      const req = new XMLHttpRequest();
 
-      req.upload.addEventListener("progress", event => {
-        if (event.lengthComputable) {
-          const copy = { ...this.state.uploadProgress };
-          copy[file.name] = {
-            state: "pending",
-            percentage: (event.loaded / event.total) * 100
-          };
-          this.setState({ uploadProgress: copy });
-        }
-      });
+      var storageRef = firebase.storage().ref();
 
-      req.upload.addEventListener("load", event => {
+      // Upload dataURL of encrypted file
+      var uploadTask = storageRef.child('images/' + file.name).putString(file.encryptionData, 'data_url')
+      .then((snapshot) => {
+
+        // Handle successful upload states
         const copy = { ...this.state.uploadProgress };
         copy[file.name] = { state: "done", percentage: 100 };
         this.setState({ uploadProgress: copy });
-        resolve(req.response);
-      });
-
-      req.upload.addEventListener("error", event => {
+        resolve(snapshot);
+      })
+      .catch((error) => {
+        // If there is an error with the upload, reset progress to 0
         const copy = { ...this.state.uploadProgress };
         copy[file.name] = { state: "error", percentage: 0 };
         this.setState({ uploadProgress: copy });
-        reject(req.response);
-      });
-
-      const formData = new FormData();
-      formData.append("file", file, file.name);
-
-      req.open("POST", "http://localhost:8000/upload");
-      req.send(formData);
+        reject(error);
+      })
     });
   }
 
@@ -123,28 +172,28 @@ class Upload extends Component {
 
   render() {
     return (
-      <div className="Upload">
-        <span className="Title">Upload Files</span>
-        <div className="Content">
-          <div>
-            <Dropzone
-              onFilesAdded={this.onFilesAdded}
-              disabled={this.state.uploading || this.state.successfullUploaded}
-            />
+        <div className="Upload">
+          <span className="Title">Encrypt Files</span>
+          <div className="Content">
+            <div>
+              <Dropzone
+                onFilesAdded={this.onFilesAdded}
+                disabled={this.state.uploading || this.state.successfullUploaded}
+              />
+            </div>
+            <div className="Files">
+              {this.state.files.map(file => {
+                return (
+                  <div key={file.name} className="Row">
+                    <span className="Filename">{file.name}</span>
+                    {this.renderProgress(file)}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div className="Files">
-            {this.state.files.map(file => {
-              return (
-                <div key={file.name} className="Row">
-                  <span className="Filename">{file.name}</span>
-                  {this.renderProgress(file)}
-                </div>
-              );
-            })}
-          </div>
+          <div className="Actions">{this.renderActions()}</div>
         </div>
-        <div className="Actions">{this.renderActions()}</div>
-      </div>
     );
   }
 }
