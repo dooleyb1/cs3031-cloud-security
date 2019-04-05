@@ -26,7 +26,7 @@ class Users extends Component {
     // Create a query against the collection.
     usersRef.get()
     .then((snapShot) => {
-      snapShot.docs.map((user) => {
+      snapShot.docs.forEach((user) => {
 
         // Extract data for given user
         var userData = user.data();
@@ -35,6 +35,8 @@ class Users extends Component {
           "name": userData.name,
           "uid": userData.uid
         });
+
+        return;
       })
 
       console.log(users);
@@ -44,7 +46,7 @@ class Users extends Component {
         loading: false
       })
 
-    }).catch((error) => console.log(error.message));
+    }).catch((error) => console.error(error.message));
   }
 
   render() {
@@ -56,7 +58,7 @@ class Users extends Component {
             this.state.loading
             ? <p>Loading...</p>
             : <ul>
-                {this.state.users.map((user, i) => (<li key={`user_{i}`}>{user.name} ({user.uid})</li>))}
+                {this.state.users.map((user, i) => (<li key={`user_{i}`}>{user.name}</li>))}
               </ul>
           }
         </div>

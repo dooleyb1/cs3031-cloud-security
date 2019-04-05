@@ -5,6 +5,7 @@ import Progress from "../progress/Progress";
 
 import * as firebase from 'firebase/app';
 import 'firebase/storage';
+import 'firebase/firestore';
 
 var CryptoJS = require("crypto-js");
 
@@ -70,16 +71,14 @@ class Upload extends Component {
     .then((encryptedFile) => {
 
       // Create new object to house file
-      var encryptedFile = {
+      var encryptedFileData = {
         name: files[0].name,
         encryptionData: encryptedFile
       };
 
-      console.log(encryptedFile);
-
       // Update state with new encrypted file
       this.setState(prevState => ({
-        files: prevState.files.concat(encryptedFile)
+        files: prevState.files.concat(encryptedFileData)
       }));
     })
   }
@@ -94,7 +93,6 @@ class Upload extends Component {
 
     try {
       await Promise.all(promises);
-      console.log('Promises resolved');
       this.setState({ successfullUploaded: true, uploading: false });
     } catch (e) {
       // Not Production ready! Do some error handling here instead...
@@ -108,14 +106,33 @@ class Upload extends Component {
       var storageRef = firebase.storage().ref();
 
       // Upload dataURL of encrypted file
-      var uploadTask = storageRef.child('images/' + file.name).putString(file.encryptionData, 'data_url')
+      storageRef.child('files/' + file.name + '.encrypted').putString(file.encryptionData, 'data_url')
       .then((snapshot) => {
 
         // Handle successful upload states
         const copy = { ...this.state.uploadProgress };
         copy[file.name] = { state: "done", percentage: 100 };
         this.setState({ uploadProgress: copy });
-        resolve(snapshot);
+
+        // Extract the downloadURL for the file and store metadata
+        snapshot.ref.getDownloadURL().then(function(downloadURL) {
+
+          // Keep a record of file location in database
+          const db = firebase.firestore();
+
+          // Create a reference to the files collection
+          var filesRef = db.collection("files");
+
+          // Add metadata for new file
+          filesRef.add({
+            name: file.name + '.encrypted',
+            location: 'files/' + file.name + '.encrypted',
+            downloadURL: downloadURL,
+          })
+
+          resolve(snapshot);
+        });
+
       })
       .catch((error) => {
         // If there is an error with the upload, reset progress to 0
@@ -173,7 +190,7 @@ class Upload extends Component {
   render() {
     return (
         <div className="Upload">
-          <span className="Title">Encrypt Files</span>
+          <span className="Title">Upload Files</span>
           <div className="Content">
             <div>
               <Dropzone

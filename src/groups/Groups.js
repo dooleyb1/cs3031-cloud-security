@@ -3,9 +3,6 @@ import "./Groups.css";
 
 import GroupsList from './GroupsList';
 import CreateGroupForm from './CreateGroupForm';
-import InputGroup from 'react-bootstrap/InputGroup';
-import FormControl from 'react-bootstrap/FormControl';
-import Button from 'react-bootstrap/Button';
 
 import GroupCreateModal from './GroupCreateModal';
 
@@ -49,7 +46,7 @@ class Groups extends Component {
     // Create a query against the collection.
     groupsRef.get()
     .then((snapShot) => {
-      snapShot.docs.map((group) => {
+      snapShot.docs.forEach((group) => {
 
         // Extract data for given group
         var groupData = group.data();
@@ -60,8 +57,6 @@ class Groups extends Component {
           "group_name": groupData.group_name,
           "members": groupData.members
         });
-
-        return;
       })
 
       this.setState({
@@ -81,10 +76,10 @@ class Groups extends Component {
 
     const db = firebase.firestore();
 
-    // Delete given document
+    // Delete given group
     db.collection("groups").doc(groupId).delete()
     .then(() => {
-      console.log("Document successfully deleted!");
+      console.log("Group successfully deleted!");
     }).catch((error) => {
       console.error("Error removing document: ", error);
     })
@@ -93,9 +88,7 @@ class Groups extends Component {
   }
 
 	handleGroupRemoval(groupId){
-		var groups = this.state.groups;
-
-		groups = groups.filter(function (el) {
+		this.state.groups.filter(function (el) {
 			return el.id !== groupId;
 		});
 

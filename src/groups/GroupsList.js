@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import './Groups.css';
-import GroupItem from './GroupItem';
 
 import { Accordion } from 'semantic-ui-react'
 
@@ -23,7 +22,7 @@ class GroupsList extends Component {
     var panels = [];
 
     // For every group generate root panel
-    this.props.groups.map((group, index) => {
+    this.props.groups.forEach((group, index) => {
 
       const groupInnerDropDownPanels = [
         { key: 'panel-1a', title: 'Members', content: 'Members Here' },
@@ -56,8 +55,6 @@ class GroupsList extends Component {
   }
 
   render(){
-
-    const { collapseID } = this.state;
 
     return (
       <div className="accordion">
