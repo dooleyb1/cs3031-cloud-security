@@ -16,44 +16,62 @@ class GroupsList extends Component {
     }
 
     this.removeGroup = this.removeGroup.bind(this);
-    this.toggleCollapse = this.toggleCollapse.bind(this);
+    this.deleteMemberFromGroup = this.deleteMemberFromGroup.bind(this);
+    this.addUsersToGroup = this.addUsersToGroup.bind(this);
+    this.generatePanels = this.generatePanels.bind(this);
   }
 
-  componentDidMount(){
-
-    var panels = [];
-
-    // For every group generate root panel
-    this.props.groups.forEach((group, index) => {
-
-      const groupInnerDropDown = (
-        <InnerGroup deleteGroup={this.removeGroup} members={group.members} groupID={group.id}/>
-      );
-
-      panels.push(
-        { key: `group-${index}`, title: `${group.group_name}` , content: { content: groupInnerDropDown } },
-      )
-    })
-
-    this.setState({groupRootPanels: panels})
+  deleteMemberFromGroup(member, group){
+    this.props.deleteMemberFromGroup(member, group);
+    return;
   }
 
-  toggleCollapse(collapseID){
-    this.setState((prevState) => ({
-      collapseID: prevState.collapseID !== collapseID ? collapseID : ""
-    }));
-  };
+  addUsersToGroup(users, group){
+    this.props.addUsersToGroup(users, group);
+    return;
+  }
 
   removeGroup(groupId){
     this.props.removeGroup(groupId);
     return;
   }
 
+  generatePanels(){
+      var panels = [];
+
+      // For ever y group generate root panel
+      this.props.groups.forEach((group, index) => {
+
+        const groupInnerDropDown = (
+          <InnerGroup
+            users={this.props.users}
+            deleteGroup={this.removeGroup}
+            deleteMemberFromGroup={this.deleteMemberFromGroup}
+            addUsersToGroup={this.addUsersToGroup}
+            members={group.members}
+            groupID={group.id}/>
+        );
+
+        panels.push(
+          { key: `group-${index}`, title: `${group.group_name}` , content: { content: groupInnerDropDown } },
+        )
+      })
+
+      return panels;
+  }
+
   render(){
+
+    const panels = this.generatePanels();
 
     return (
       <div className="accordion">
-        <Accordion panels={this.state.groupRootPanels} fluid styled />
+        {
+          this.props.users
+          ? <Accordion panels={panels} fluid styled />
+          : <p>Loading...</p>
+        }
+
       </div>
     );
   }

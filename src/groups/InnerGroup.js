@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 
 import { Accordion, Menu, List, Icon, Button, Image } from 'semantic-ui-react';
+import AddUserToGroupModal from './AddUserToGroupModal';
 
 class InnerGroup extends Component {
 
@@ -8,8 +9,11 @@ class InnerGroup extends Component {
     super(props);
 
     this.state = {
-      activeIndex: 0
+      activeIndex: 0,
+      modalShow: false,
     };
+
+    this.triggerModal = this.triggerModal.bind(this);
   }
 
   handleClick = (e, titleProps) => {
@@ -18,6 +22,11 @@ class InnerGroup extends Component {
     const { activeIndex } = this.state
     const newIndex = activeIndex === index ? -1 : index
     this.setState({ activeIndex: newIndex })
+  }
+
+  triggerModal = () => {
+    console.log('triggering');
+    this.setState({modalShow: true})
   }
 
   render() {
@@ -30,13 +39,14 @@ class InnerGroup extends Component {
         return(
           <List.Item key={`member-${i}`}>
             <List.Content floated='right'>
-              <Button size='tiny' negative>X</Button>
+              <Button onClick={() => this.props.deleteMemberFromGroup(member, this.props.groupID)} size='tiny' negative>X</Button>
             </List.Content>
             <Image floated='left' avatar src={require('../images/avatar/small/mark.png')}/>
             <List.Content floated='left'>{member}</List.Content>
           </List.Item>
         )
       })}
+      <Button onClick={() => this.triggerModal()} size='tiny' positive>Add Users</Button>
       </List>
     )
 
@@ -51,6 +61,8 @@ class InnerGroup extends Component {
       marginTop: 15,
       minWidth: 5,
     }
+
+    let modalClose = () => this.setState({ modalShow: false });
 
     return (
       <div>
@@ -76,6 +88,13 @@ class InnerGroup extends Component {
           </Menu.Item>
         </Accordion>
         <button type="button" style={style} onClick={() => this.props.deleteGroup(this.props.groupID)}>Delete Group</button>
+        <AddUserToGroupModal
+          addUsersToGroup={this.props.addUsersToGroup}
+          group={this.props.groupID}
+          users={this.props.users}
+          show={this.state.modalShow}
+          onHide={modalClose}
+          />
       </div>
     );
   }

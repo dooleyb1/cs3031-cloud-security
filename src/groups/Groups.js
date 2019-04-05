@@ -20,13 +20,54 @@ class Groups extends Component {
 
     this.handleGroupCreate = this.handleGroupCreate.bind(this);
     this.handleGroupRemoval = this.handleGroupRemoval.bind(this);
+    this.addUsersToGroup = this.addUsersToGroup.bind(this);
+    this.deleteMemberFromGroup = this.deleteMemberFromGroup.bind(this);
     this.fetchGroups = this.fetchGroups.bind(this);
+    this.fetchUsers = this.fetchUsers.bind(this);
     this.deleteGroup = this.deleteGroup.bind(this);
   }
 
   componentDidMount(){
 
     this.fetchGroups()
+    this.fetchUsers();
+  }
+
+  fetchUsers(){
+
+    // Set state to loading
+    this.setState({
+      loading: true
+    })
+
+    const db = firebase.firestore();
+
+    // Create a reference to the users collection
+    var usersRef = db.collection("users");
+    var users = [];
+
+    // Create a query against the collection.
+    usersRef.get()
+    .then((snapShot) => {
+      snapShot.docs.forEach((user) => {
+
+        // Extract data for given user
+        var userData = user.data();
+
+        users.push({
+          "name": userData.name,
+          "uid": userData.uid
+        });
+
+        return;
+      })
+
+      this.setState({
+        users: users,
+        loading: false
+      })
+
+    }).catch((error) => console.error(error.message));
   }
 
   fetchGroups(){
@@ -66,7 +107,6 @@ class Groups extends Component {
   }
 
   deleteGroup(groupId){
-    console.log(groupId);
 
     // Set state to loading
     this.setState({
@@ -92,7 +132,6 @@ class Groups extends Component {
 		this.state.groups.filter(function (el) {
 			return el.id !== groupId;
 		});
-
 
 		this.deleteGroup(groupId);
 		return;
@@ -133,6 +172,22 @@ class Groups extends Component {
     return;
 	}
 
+  addUsersToGroup(users, group){
+    console.log('Adding ', users, ' to group ', group);
+    console.log(group);
+
+    const db = firebase.firestore();
+    var groupRef = db.collection("groups").doc(group);
+
+    groupRef.update({
+      members: firebase.firestore.FieldValue.arrayUnion(users[0])
+    });
+  }
+
+  deleteMemberFromGroup(member, group){
+    console.log('Deleting ', member, ' from group ', group);
+  }
+
   render() {
 
     let modalClose = () => this.setState({ modalShow: false });
@@ -144,7 +199,12 @@ class Groups extends Component {
             this.state.loading
             ? <p>Loading...</p>
             : <div>
-                <GroupsList groups={this.state.groups} removeGroup={this.handleGroupRemoval}/>
+                <GroupsList
+                  groups={this.state.groups}
+                  users={this.state.users}
+                  deleteMemberFromGroup={this.deleteMemberFromGroup}
+                  addUsersToGroup={this.addUsersToGroup}
+                  removeGroup={this.handleGroupRemoval}/>
                 <br/>
                 <CreateGroupForm handleGroupCreate={this.handleGroupCreate} />
                 <GroupCreateModal
