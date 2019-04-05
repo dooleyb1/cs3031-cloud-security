@@ -27,7 +27,7 @@ class GroupsList extends Component {
     this.props.groups.forEach((group, index) => {
 
       const groupInnerDropDown = (
-        <InnerGroup />
+        <InnerGroup deleteGroup={this.removeGroup} members={group.members} groupID={group.id}/>
       );
 
       panels.push(

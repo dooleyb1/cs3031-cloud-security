@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 
-import { Accordion, Menu} from 'semantic-ui-react'
+import { Accordion, Menu, List, Icon, Button, Image } from 'semantic-ui-react';
 
 class InnerGroup extends Component {
 
@@ -25,10 +25,19 @@ class InnerGroup extends Component {
     const { activeIndex } = this.state
 
     const MembersList = (
-      <ul>
-        <li>Member 1</li>
-        <li>Member 2</li>
-      </ul>
+      <List divided verticalAlign='top'>
+      {this.props.members.map((member, i) => {
+        return(
+          <List.Item key={`member-${i}`}>
+            <List.Content floated='right'>
+              <Button size='tiny' negative>X</Button>
+            </List.Content>
+            <Image floated='left' avatar src={require('../images/avatar/small/mark.png')}/>
+            <List.Content floated='left'>{member}</List.Content>
+          </List.Item>
+        )
+      })}
+      </List>
     )
 
     const FilesList = (
@@ -66,7 +75,7 @@ class InnerGroup extends Component {
           <Accordion.Content active={activeIndex === 1} content={FilesList} />
           </Menu.Item>
         </Accordion>
-        <button type="button" style={style} onClick={() => this.props.removeGroup('he')}>Delete Group</button>
+        <button type="button" style={style} onClick={() => this.props.deleteGroup(this.props.groupID)}>Delete Group</button>
       </div>
     );
   }

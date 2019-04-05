@@ -49,10 +49,9 @@ class Groups extends Component {
 
         // Extract data for given group
         var groupData = group.data();
-        var groupId = group.id;
 
         myGroups.push({
-          "id": groupId,
+          "id": groupData.id,
           "group_name": groupData.group_name,
           "members": groupData.members
         });
@@ -67,6 +66,7 @@ class Groups extends Component {
   }
 
   deleteGroup(groupId){
+    console.log(groupId);
 
     // Set state to loading
     this.setState({
@@ -75,8 +75,10 @@ class Groups extends Component {
 
     const db = firebase.firestore();
 
+    var groupRef = db.collection("groups").doc(groupId);
+
     // Delete given group
-    db.collection("groups").doc(groupId).delete()
+    groupRef.delete()
     .then(() => {
       console.log("Group successfully deleted!");
     }).catch((error) => {
@@ -107,7 +109,19 @@ class Groups extends Component {
     }
 
     // Push new group to firestore
-    groupsRef.add(newGroup);
+    groupsRef.add(newGroup)
+    .then(function(docRef) {
+      console.log("Document written with ID: ", docRef.id);
+
+      // Add ID to group
+      docRef.set({
+        id: docRef.id
+      }, { merge: true })
+
+    })
+    .catch(function(error) {
+      console.error("Error adding document: ", error);
+    });
 
     this.fetchGroups();
 
