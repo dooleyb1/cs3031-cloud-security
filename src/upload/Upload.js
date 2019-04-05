@@ -1,6 +1,7 @@
 import React, { Component } from "react";
-import Dropzone from "../dropzone/Dropzone";
 import "./Upload.css";
+
+import Dropzone from "../dropzone/Dropzone";
 import Progress from "../progress/Progress";
 
 import * as firebase from 'firebase/app';
@@ -128,6 +129,7 @@ class Upload extends Component {
             name: file.name + '.encrypted',
             location: 'files/' + file.name + '.encrypted',
             downloadURL: downloadURL,
+            isEncrypted: true,
           })
 
           resolve(snapshot);
@@ -195,6 +197,7 @@ class Upload extends Component {
             <div>
               <Dropzone
                 onFilesAdded={this.onFilesAdded}
+                message="Upload Files"
                 disabled={this.state.uploading || this.state.successfullUploaded}
               />
             </div>

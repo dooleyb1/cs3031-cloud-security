@@ -29,9 +29,15 @@ class GroupsList extends Component {
         { key: 'panel-ba', title: 'Files', content: 'Files Here' },
       ]
 
+      const style = {
+        marginTop: 15,
+        minWidth: 5,
+      }
+
       const groupInnerDropDown = (
         <div>
           <Accordion panels={groupInnerDropDownPanels} fluid styled />
+          <button type="button" style={style} onClick={() => this.removeGroup(group.id)}>Delete Group</button>
         </div>
       );
 

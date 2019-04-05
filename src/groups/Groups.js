@@ -3,7 +3,6 @@ import "./Groups.css";
 
 import GroupsList from './GroupsList';
 import CreateGroupForm from './CreateGroupForm';
-
 import GroupCreateModal from './GroupCreateModal';
 
 import * as firebase from 'firebase/app';

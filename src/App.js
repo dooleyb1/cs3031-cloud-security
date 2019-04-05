@@ -6,6 +6,7 @@ import Upload from "./upload/Upload";
 import Users from "./users/Users";
 import Groups from "./groups/Groups";
 import Files from "./files/Files";
+import Decrypt from "./decrypt/Decrypt";
 
 import SignIn from "./sign-in/SignIn";
 import ButtonBar from "./button-bar/ButtonBar";
@@ -33,6 +34,7 @@ class App extends Component {
       showUsers: false,
       showGroups: false,
       showFiles: false,
+      showDecrypt: false,
     }
 
     this.toggleButton = this.toggleButton.bind(this);
@@ -55,6 +57,7 @@ class App extends Component {
           showUsers: false,
           showGroups: false,
           showFiles: false,
+          showDecrypt: false,
         }));
         break;
       case "users":
@@ -63,6 +66,7 @@ class App extends Component {
           showUsers: true,
           showGroups: false,
           showFiles: false,
+          showDecrypt: false,
         }));
         break;
       case "groups":
@@ -71,6 +75,7 @@ class App extends Component {
           showUsers: false,
           showGroups: true,
           showFiles: false,
+          showDecrypt: false,
         }));
         break;
       case "files":
@@ -79,6 +84,16 @@ class App extends Component {
           showUsers: false,
           showGroups: false,
           showFiles: true,
+          showDecrypt: false,
+        }));
+        break;
+      case "decrypt":
+        this.setState(prevState => ({
+          showUpload: false,
+          showUsers: false,
+          showGroups: false,
+          showFiles: false,
+          showDecrypt: true,
         }));
         break;
       default:
@@ -99,6 +114,7 @@ class App extends Component {
       showUsers,
       showGroups,
       showFiles,
+      showDecrypt,
     } = this.state
 
     return (
@@ -114,6 +130,7 @@ class App extends Component {
                 showUsers={this.state.showUsers}
                 showGroups={this.state.showGroups}
                 showFiles={this.state.showFiles}
+                showDecrypt={this.state.showDecrypt}
                 toggleButtonState={this.toggleButton}
               />
               <div className="Card">
@@ -121,6 +138,7 @@ class App extends Component {
                   {showUsers && <Users/>}
                   {showGroups && <Groups user={user}/>}
                   {showFiles && <Files/>}
+                  {showDecrypt && <Decrypt/>}
               </div>
               <button className="SignOutButton" onClick={signOut}>Sign Out</button>
             </div>

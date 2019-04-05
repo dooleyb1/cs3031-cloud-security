@@ -14,6 +14,7 @@ class ButtonBar extends Component {
           <Button active={this.props.showUsers} onClick={() => this.props.toggleButtonState("users")}>Users</Button>
           <Button active={this.props.showGroups} onClick={() => this.props.toggleButtonState("groups")}>Groups</Button>
           <Button active={this.props.showFiles} onClick={() => this.props.toggleButtonState("files")}>Files</Button>
+          <Button active={this.props.showDecrypt} onClick={() => this.props.toggleButtonState("decrypt")}>Decrypt</Button>
         </ButtonGroup>
     </div>
     );
