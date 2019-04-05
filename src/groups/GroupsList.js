@@ -1,7 +1,9 @@
 import React, { Component } from "react";
 import './Groups.css';
 
-import { Accordion } from 'semantic-ui-react'
+import { Accordion } from 'semantic-ui-react';
+
+import InnerGroup from './InnerGroup';
 
 class GroupsList extends Component {
 
@@ -24,21 +26,8 @@ class GroupsList extends Component {
     // For every group generate root panel
     this.props.groups.forEach((group, index) => {
 
-      const groupInnerDropDownPanels = [
-        { key: 'panel-1a', title: 'Members', content: 'Members Here' },
-        { key: 'panel-ba', title: 'Files', content: 'Files Here' },
-      ]
-
-      const style = {
-        marginTop: 15,
-        minWidth: 5,
-      }
-
       const groupInnerDropDown = (
-        <div>
-          <Accordion panels={groupInnerDropDownPanels} fluid styled />
-          <button type="button" style={style} onClick={() => this.removeGroup(group.id)}>Delete Group</button>
-        </div>
+        <InnerGroup />
       );
 
       panels.push(

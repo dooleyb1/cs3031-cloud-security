@@ -1,6 +1,8 @@
 import React, { Component } from "react";
 import "./Files.css";
 
+import { List, Icon } from 'semantic-ui-react'
+
 import * as firebase from 'firebase/app';
 import 'firebase/firestore';
 
@@ -50,9 +52,30 @@ class Files extends Component {
           {
             this.state.loading
             ? <p>Loading...</p>
-            : <ul>
-                {this.state.files.map((file, i) => (<li key={`file_${i}`}><a download={`${file.name}`} href={`${file.downloadURL}`}>{file.name}</a></li>))}
-              </ul>
+            : <List divided verticalAlign='middle'>
+              <p>My Group</p>
+                {this.state.files.map((file, i) => {
+                  return(
+                      <List.Item key={`file-${i}`}>
+                        <Icon name='lock'/>
+                        <List.Content floated='left'>
+                          <a download={`${file.name}`} href={`${file.downloadURL}`} className='file-link'>{file.name}</a>
+                        </List.Content>
+                      </List.Item>
+                  )
+                })}
+                <p>Second Group</p>
+                  {this.state.files.map((file, i) => {
+                    return(
+                        <List.Item key={`file-${i}`}>
+                          <Icon name='lock'/>
+                          <List.Content floated='left'>
+                            <a download={`${file.name}`} href={`${file.downloadURL}`} className='file-link'>{file.name}</a>
+                          </List.Content>
+                        </List.Item>
+                    )
+                  })}
+            </List>
           }
         </div>
       </div>

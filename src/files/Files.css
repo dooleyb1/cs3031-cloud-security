@@ -9,6 +9,10 @@
   overflow-y: scroll;
 }
 
+.lock-icon {
+  margin-top: 10px;
+}
+
 li {
   text-align: left;
 }
