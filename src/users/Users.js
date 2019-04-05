@@ -1,6 +1,8 @@
 import React, { Component } from "react";
 import "./Users.css";
 
+import { Button, Image, List } from 'semantic-ui-react'
+
 import * as firebase from 'firebase/app';
 import 'firebase/firestore';
 
@@ -57,9 +59,19 @@ class Users extends Component {
           {
             this.state.loading
             ? <p>Loading...</p>
-            : <ul>
-                {this.state.users.map((user, i) => (<li key={`user_{i}`}>{user.name}</li>))}
-              </ul>
+            : <List divided verticalAlign='middle'>
+                {this.state.users.map((user, i) => {
+                  return(
+                    <List.Item>
+                      <List.Content floated='right'>
+                        <Button>Add</Button>
+                      </List.Content>
+                      <Image floated='left' avatar src={require('../images/avatar/small/mark.png')}/>
+                      <List.Content floated='left'>{user.name}</List.Content>
+                    </List.Item>
+                  )
+                })}
+            </List>
           }
         </div>
       </div>

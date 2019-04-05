@@ -37,7 +37,7 @@ class Upload extends Component {
         resolve('data:application/octet-stream,' + encrypted);
       };
 
-        reader.readAsDataURL(file);
+      reader.readAsDataURL(file);
     });
   }
 

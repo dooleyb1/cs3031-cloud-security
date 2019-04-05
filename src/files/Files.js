@@ -51,7 +51,7 @@ class Files extends Component {
             this.state.loading
             ? <p>Loading...</p>
             : <ul>
-                {this.state.files.map((file, i) => (<li key={`file_{i}`}><a download={`${file.name}`} href={`${file.downloadURL}`}>{file.name}</a></li>))}
+                {this.state.files.map((file, i) => (<li key={`file_${i}`}><a download={`${file.name}`} href={`${file.downloadURL}`}>{file.name}</a></li>))}
               </ul>
           }
         </div>
