@@ -49,7 +49,10 @@ class GroupsList extends Component {
             deleteMemberFromGroup={this.deleteMemberFromGroup}
             addUsersToGroup={this.addUsersToGroup}
             members={group.members}
-            groupID={group.id}/>
+            groupID={group.id}
+            addUserModalToggle={this.props.addUserModalToggle}
+            addUserModalShow={this.props.addUserModalShow}
+            />
         );
 
         panels.push(

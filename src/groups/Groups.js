@@ -15,7 +15,8 @@ class Groups extends Component {
 
     this.state = {
       loading: true,
-      modalShow: false,
+      createUserModalShow: false,
+      addUserModalShow: false,
     };
 
     this.handleGroupCreate = this.handleGroupCreate.bind(this);
@@ -25,6 +26,7 @@ class Groups extends Component {
     this.fetchGroups = this.fetchGroups.bind(this);
     this.fetchUsers = this.fetchUsers.bind(this);
     this.deleteGroup = this.deleteGroup.bind(this);
+    this.addUserModalToggle = this.addUserModalToggle.bind(this);
   }
 
   componentDidMount(){
@@ -52,13 +54,7 @@ class Groups extends Component {
       snapShot.docs.forEach((user) => {
 
         // Extract data for given user
-        var userData = user.data();
-
-        users.push({
-          "name": userData.name,
-          "uid": userData.uid
-        });
-
+        users.push(user.data());
         return;
       })
 
@@ -119,9 +115,7 @@ class Groups extends Component {
 
     // Delete given group
     groupRef.delete()
-    .then(() => {
-      console.log("Group successfully deleted!");
-    }).catch((error) => {
+    .catch((error) => {
       console.error("Error removing document: ", error);
     })
 
@@ -150,8 +144,6 @@ class Groups extends Component {
     // Push new group to firestore
     groupsRef.add(newGroup)
     .then(function(docRef) {
-      console.log("Document written with ID: ", docRef.id);
-
       // Add ID to group
       docRef.set({
         id: docRef.id
@@ -173,24 +165,47 @@ class Groups extends Component {
 	}
 
   addUsersToGroup(users, group){
-    console.log('Adding ', users, ' to group ', group);
-    console.log(group);
+
+    const db = firebase.firestore();
+    var groupRef = db.collection("groups").doc(group);
+
+    // Add each user to group
+    users.forEach((user) => {
+      groupRef.update({
+        members: firebase.firestore.FieldValue.arrayUnion(user)
+      });
+    })
+
+    // Close modal and fetch updated grouo
+    this.setState({ addUserModalShow: false });
+    this.fetchGroups();
+  }
+
+  deleteMemberFromGroup(memberToDelete, group){
 
     const db = firebase.firestore();
     var groupRef = db.collection("groups").doc(group);
 
     groupRef.update({
-      members: firebase.firestore.FieldValue.arrayUnion(users[0])
-    });
+      members: firebase.firestore.FieldValue.arrayRemove(memberToDelete)
+    })
+    .then((snapshot) => {
+      this.fetchGroups();
+    })
+    .catch((error) => {
+      console.error('Error removing user,', memberToDelete, 'from group', group);
+    })
   }
 
-  deleteMemberFromGroup(member, group){
-    console.log('Deleting ', member, ' from group ', group);
+  addUserModalToggle(){
+    this.setState((prevState) => ({
+      addUserModalShow: !prevState.addUserModalShow
+    }));
   }
 
   render() {
 
-    let modalClose = () => this.setState({ modalShow: false });
+    let createGroupModalClose = () => this.setState({ createGroupModalClose: false });
 
     return (
       <div className="container">
@@ -204,12 +219,14 @@ class Groups extends Component {
                   users={this.state.users}
                   deleteMemberFromGroup={this.deleteMemberFromGroup}
                   addUsersToGroup={this.addUsersToGroup}
+                  addUserModalToggle={this.addUserModalToggle}
+                  addUserModalShow={this.state.addUserModalShow}
                   removeGroup={this.handleGroupRemoval}/>
                 <br/>
                 <CreateGroupForm handleGroupCreate={this.handleGroupCreate} />
                 <GroupCreateModal
-                  show={this.state.modalShow}
-                  onHide={modalClose}
+                  show={this.state.createUserModalShow}
+                  onHide={createGroupModalClose}
                   />
               </div>
           }

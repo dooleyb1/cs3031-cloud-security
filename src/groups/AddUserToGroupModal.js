@@ -24,23 +24,15 @@ class AddUserToGroupModal extends Component {
       return filteredUser.uid === user.uid
     })
 
-    console.log('Result', result);
-
-
     // User not found - add
-    if(result.length == 0 && this.state.usersToAdd.length > 0){
-
-      console.log('User not found, adding', user);
-
+    if(result.length === 0 && this.state.usersToAdd.length > 0){
       this.setState(prevState => ({
         usersToAdd: [...prevState.usersToAdd, user]
       }));
     }
 
     // Nothing in state yet, add user
-    else if(result.length == 0 && this.state.usersToAdd.length == 0){
-      console.log('Empty state, adding user');
-
+    else if(result.length === 0 && this.state.usersToAdd.length === 0){
       var newState = [];
       newState.push(user);
       this.setState({usersToAdd: newState});
@@ -48,14 +40,9 @@ class AddUserToGroupModal extends Component {
 
     // User already found - remove
     else {
-
-      console.log('User found, removing user ', user);
-
       var newUsersToAdd = this.state.usersToAdd.filter(filteredUser => {
-        return filteredUser.uid != user.uid
+        return filteredUser.uid !== user.uid
       })
-
-      console.log('New state ', newUsersToAdd);
 
       this.setState({usersToAdd: newUsersToAdd});
     }
@@ -78,7 +65,7 @@ class AddUserToGroupModal extends Component {
           <List divided verticalAlign='middle'>
               {this.props.users.map((user, i) => {
                 return(
-                  <List.Item>
+                  <List.Item key={`user-${i}`}>
                     <List.Content floated='right'>
                       <Checkbox toggle onChange={() => this.userSelected(user)}/>
                     </List.Content>

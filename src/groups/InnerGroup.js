@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 
-import { Accordion, Menu, List, Icon, Button, Image } from 'semantic-ui-react';
+import { Accordion, Menu, List, Button, Image } from 'semantic-ui-react';
 import AddUserToGroupModal from './AddUserToGroupModal';
 
 class InnerGroup extends Component {
@@ -12,8 +12,6 @@ class InnerGroup extends Component {
       activeIndex: 0,
       modalShow: false,
     };
-
-    this.triggerModal = this.triggerModal.bind(this);
   }
 
   handleClick = (e, titleProps) => {
@@ -22,11 +20,6 @@ class InnerGroup extends Component {
     const { activeIndex } = this.state
     const newIndex = activeIndex === index ? -1 : index
     this.setState({ activeIndex: newIndex })
-  }
-
-  triggerModal = () => {
-    console.log('triggering');
-    this.setState({modalShow: true})
   }
 
   render() {
@@ -42,11 +35,11 @@ class InnerGroup extends Component {
               <Button onClick={() => this.props.deleteMemberFromGroup(member, this.props.groupID)} size='tiny' negative>X</Button>
             </List.Content>
             <Image floated='left' avatar src={require('../images/avatar/small/mark.png')}/>
-            <List.Content floated='left'>{member}</List.Content>
+            <List.Content floated='left'>{member.name}</List.Content>
           </List.Item>
         )
       })}
-      <Button onClick={() => this.triggerModal()} size='tiny' positive>Add Users</Button>
+      <Button onClick={() => this.props.addUserModalToggle()} size='tiny' positive>Add Users</Button>
       </List>
     )
 
@@ -61,8 +54,6 @@ class InnerGroup extends Component {
       marginTop: 15,
       minWidth: 5,
     }
-
-    let modalClose = () => this.setState({ modalShow: false });
 
     return (
       <div>
@@ -91,9 +82,11 @@ class InnerGroup extends Component {
         <AddUserToGroupModal
           addUsersToGroup={this.props.addUsersToGroup}
           group={this.props.groupID}
+          members={this.props.members}
           users={this.props.users}
-          show={this.state.modalShow}
-          onHide={modalClose}
+          addUserModalToggle={this.props.addUserModalToggle}
+          show={this.props.addUserModalShow}
+          onHide={this.props.addUserModalToggle}
           />
       </div>
     );

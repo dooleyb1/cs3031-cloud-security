@@ -67,7 +67,7 @@ class Upload extends Component {
 
   async onFilesAdded(files) {
 
-    // Encrypt each file //TODO
+    // Encrypt each file 
     this.encrypt(files[0])
     .then((encryptedFile) => {
 
