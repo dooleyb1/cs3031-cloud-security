@@ -3,6 +3,8 @@ import "./Files.css";
 
 import { List, Icon } from 'semantic-ui-react'
 
+import GroupsFiles from './GroupsFiles';
+
 import * as firebase from 'firebase/app';
 import 'firebase/firestore';
 
@@ -12,73 +14,101 @@ class Files extends Component {
     super(props);
 
     this.state = {
-      files: [],
+      files: '',
+      groups: [],
       loading: true
     };
+
+    this.fetchGroups = this.fetchGroups.bind(this);
   }
 
   // Fetch files here
-  componentDidMount(){
+  async componentDidMount(){
+    await this.fetchGroups();
+  }
+
+  async fetchFilesForGroup(group){
+
+    return new Promise((resolve, reject) => {
+      const db = firebase.firestore();
+
+      // Extract files array
+      var filesRefs = group.files;
+      var files = []
+      var fileData, fileRef;
+
+      // For each reference, extract actual data
+      filesRefs.forEach((docRef) => {
+        var fileRef = db.collection("files").doc(docRef.id);
+
+        fileRef.get()
+        .then((doc) => {
+          var fileData = doc.data();
+
+          files.push(fileData);
+        })
+      })
+      resolve(files)
+    })
+  }
+
+  async fetchGroups(){
+
+    // Set state to loading
+    this.setState({
+      loading: true
+    })
 
     const db = firebase.firestore();
 
-    // Create a reference to the files collection
-    var filesRef = db.collection("files");
-    var files = [];
+    // Create a reference to the groups collection
+    var groupsRef = db.collection("groups");
+    var myGroups = [];
 
     // Create a query against the collection.
-    filesRef.get()
+    groupsRef.get()
     .then((snapShot) => {
-      snapShot.docs.forEach((file) => {
+      snapShot.docs.forEach((group) => {
 
-        // Extract data for given file
-        var fileData = file.data();
-        files.push(fileData);
+        // Extract data for given group
+        var groupData = group.data();
+        myGroups.push(groupData);
+
+        this.fetchFilesForGroup(groupData)
+        .then((files) => {
+          this.setState(prevState => ({
+              files: {
+                  ...prevState.files,
+                  [group.id]: files
+              }
+          }))
+        });
       })
 
+      console.log(myGroups);
       this.setState({
-        files: files,
+        groups: myGroups,
         loading: false
       })
 
-    }).catch((error) => console.error(error.message));
+    }).catch((error) => console.log(error.message));
+  }
+
+  renderFilesForGroup(group){
+
+    if(this.state.files[group.id]){
+      return this.state.files[group.id].map((file) =>
+        <li>{file.name}</li>
+      )
+    } else{
+      return (<li>Loading...</li>)
+    }
   }
 
   render() {
 
     return (
-      <div className="container">
-        <div className="center-col">
-          {
-            this.state.loading
-            ? <p>Loading...</p>
-            : <List divided verticalAlign='middle'>
-              <p>My Group</p>
-                {this.state.files.map((file, i) => {
-                  return(
-                      <List.Item key={`file-${i}`}>
-                        <Icon name='lock'/>
-                        <List.Content floated='left'>
-                          <a download={`${file.name}`} href={`${file.downloadURL}`} className='file-link'>{file.name}</a>
-                        </List.Content>
-                      </List.Item>
-                  )
-                })}
-                <p>Second Group</p>
-                  {this.state.files.map((file, i) => {
-                    return(
-                        <List.Item key={`file-${i}`}>
-                          <Icon name='lock'/>
-                          <List.Content floated='left'>
-                            <a download={`${file.name}`} href={`${file.downloadURL}`} className='file-link'>{file.name}</a>
-                          </List.Content>
-                        </List.Item>
-                    )
-                  })}
-            </List>
-          }
-        </div>
-      </div>
+      <p>Hi</p>
     );
   }
 }

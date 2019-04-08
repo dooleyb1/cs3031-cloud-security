@@ -1,14 +1,15 @@
 .Dropzone {
-  height: 120px;
-  width: 120px;
+  height: 25vh;
+  width: 25vh;
   background-color: #fff;
   border: 2px dashed rgb(187, 186, 186);
+  margin-top: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  font-size: 12px;
+  font-size: 16px;
 }
 
 .Highlight {
@@ -17,8 +18,8 @@
 
 .Icon {
   opacity: 0.3;
-  height: 64px;
-  width: 64px;
+  height: 80px;
+  width: 80px;
 }
 
 .FileInput {

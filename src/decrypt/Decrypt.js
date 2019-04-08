@@ -4,6 +4,8 @@ import "./Decrypt.css";
 import Dropzone from "../dropzone/Dropzone";
 import Progress from "../progress/Progress";
 
+import Button from 'react-bootstrap/Button';
+
 var CryptoJS = require("crypto-js");
 
 class Decrypt extends Component {
@@ -32,39 +34,39 @@ class Decrypt extends Component {
   }
 
   async decrypt(file){
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
+    const reader = new FileReader();
 
-      reader.onload = function (e) {
+    reader.onload = function (e) {
 
-        var decrypted = CryptoJS.AES.decrypt(e.target.result, 'password').toString(CryptoJS.enc.Latin1);
+      var decrypted = CryptoJS.AES.decrypt(e.target.result, 'password').toString(CryptoJS.enc.Latin1);
 
-        if(!/^data:/.test(decrypted)){
-            alert("Invalid pass phrase or file! Please try again.");
-            return false;
-        }
-
-        // Handle file download here
-        let a = document.createElement('a');
-        a.href = decrypted;
-        a.download = file.name.replace('.encrypted','');
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
-        resolve(decrypted);
+      if(!/^data:/.test(decrypted)){
+          alert("Invalid pass phrase or file! Please try again.");
+          return false;
+      } else {
+        console.log("Successful decryption", decrypted);
       }
 
-      reader.readAsText(file);
-    });
+      // Handle file download here
+      let a = document.createElement('a');
+      a.href = decrypted;
+      a.setAttribute('download', 'filename.png');
+      document.body.appendChild(a);
+      a.click();
+    }
+
+    reader.readAsText(file);
   }
 
   async onFilesAdded(files) {
+
+    console.log('Decrypting', files[0]);
 
     // Decrypt file
     this.decrypt(files[0])
     .then((decryptedFile) => {
 
+      console.log('decryptedFile', decryptedFile);
       // Update state with new encrypted file
       this.setState(prevState => ({
         files: prevState.files.concat(decryptedFile)
@@ -112,22 +114,22 @@ class Decrypt extends Component {
   renderActions() {
     if (this.state.successfullyDecrypted) {
       return (
-        <button
+        <Button
           onClick={() =>
             this.setState({ files: [], successfullyDecrypted: false })
           }
         >
           Clear
-        </button>
+        </Button>
       );
     } else {
       return (
-        <button
+        <Button
           disabled={this.state.files.length < 0 || this.state.decrypting}
           onClick={this.decryptFiles}
         >
           Decrypt
-        </button>
+        </Button>
       );
     }
   }
@@ -144,16 +146,6 @@ class Decrypt extends Component {
               onFilesAdded={this.onFilesAdded}
               disabled={this.state.decrypting || this.state.successfullyDecrypted}
             />
-          </div>
-          <div className="Files">
-            {this.state.files.map(file => {
-              return (
-                <div key={file.name} className="Row">
-                  <span className="Filename">{file.name}</span>
-                  {this.renderProgress(file)}
-                </div>
-              );
-            })}
           </div>
         </div>
         <div className="Actions">{this.renderActions()}</div>

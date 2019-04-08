@@ -30,7 +30,7 @@ class CreateGroupForm extends Component {
 
 	render(){
 		return (
-			<div className="commentForm vert-offset-top-2">
+			<div className="CreateGroupForm commentForm vert-offset-top-2">
           <InputGroup className="mb-3">
             <FormControl
               placeholder={this.state.newGroupName}

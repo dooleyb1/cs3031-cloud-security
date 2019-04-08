@@ -8,6 +8,9 @@ import GroupCreateModal from './GroupCreateModal';
 import * as firebase from 'firebase/app';
 import 'firebase/firestore';
 
+var CryptoJS = require("crypto-js");
+var fileDownload = require('js-file-download');
+
 class Groups extends Component {
 
   constructor(props) {
@@ -27,15 +30,20 @@ class Groups extends Component {
     this.fetchUsers = this.fetchUsers.bind(this);
     this.deleteGroup = this.deleteGroup.bind(this);
     this.addUserModalToggle = this.addUserModalToggle.bind(this);
+    this.decryptFile = this.decryptFile.bind(this);
   }
 
-  componentDidMount(){
+  async componentDidMount(){
+
+    this.fetchUsers();
 
     this.fetchGroups()
-    this.fetchUsers();
+    .then((groups) => {
+      this.fetchFiles(groups);
+    });
   }
 
-  fetchUsers(){
+  async fetchUsers(){
 
     // Set state to loading
     this.setState({
@@ -59,47 +67,81 @@ class Groups extends Component {
       })
 
       this.setState({
-        users: users,
-        loading: false
+        users: users
       })
 
     }).catch((error) => console.error(error.message));
   }
 
-  fetchGroups(){
+  async fetchFiles(){
+    return new Promise((resolve, reject) => {
+      const db = firebase.firestore();
 
-    // Set state to loading
-    this.setState({
-      loading: true
-    })
+      var files = {};
 
-    const db = firebase.firestore();
+      this.state.groups.forEach((group) => {
+        // Extract files array
+        var filesRefs = group.files;
+        var fileData, fileRef;
+        var groupsFiles = [];
 
-    // Create a reference to the groups collection
-    var groupsRef = db.collection("groups");
-    var myGroups = [];
+        // For each reference, extract actual data
+        filesRefs.forEach((docRef) => {
+          var fileRef = db.collection("files").doc(docRef.id);
 
-    // Create a query against the collection.
-    groupsRef.get()
-    .then((snapShot) => {
-      snapShot.docs.forEach((group) => {
+          fileRef.get()
+          .then((doc) => {
 
-        // Extract data for given group
-        var groupData = group.data();
+            // Extract each file within group and push to array
+            var fileData = doc.data();
+            groupsFiles.push(fileData);
+          })
+        })
 
-        myGroups.push({
-          "id": groupData.id,
-          "group_name": groupData.group_name,
-          "members": groupData.members
-        });
+        // Once we have every file, push to global variable to be set to state
+        files[group.id] = groupsFiles;
+        console.log(files);
       })
 
       this.setState({
-        groups: myGroups,
-        loading: false
+        loading: false,
+        files: files
+      })
+    })
+  }
+
+  async fetchGroups(){
+
+    return new Promise((resolve, reject) => {
+      // Set state to loading
+      this.setState({
+        loading: true
       })
 
-    }).catch((error) => console.log(error.message));
+      const db = firebase.firestore();
+
+      // Create a reference to the groups collection
+      var groupsRef = db.collection("groups");
+      var myGroups = [];
+
+      // Create a query against the collection.
+      groupsRef.get()
+      .then((snapShot) => {
+        snapShot.docs.forEach((group) => {
+
+          // Extract data for given group
+          var groupData = group.data();
+          myGroups.push(groupData)
+        })
+
+        this.setState({
+          groups: myGroups,
+        })
+
+        resolve(myGroups);
+
+      }).catch((error) => console.log(error.message));
+    });
   }
 
   deleteGroup(groupId){
@@ -197,6 +239,41 @@ class Groups extends Component {
     })
   }
 
+  async decryptFile(file){
+    console.log('Decrypting file', file);
+
+    var xhr = new XMLHttpRequest();
+    var reader = new FileReader();
+
+    xhr.responseType = 'blob';
+
+    // XHR Callback
+    xhr.onload = function(event) {
+      var blob = xhr.response;
+      console.log(blob);
+      reader.readAsText(blob);
+    };
+
+    // Reader callback
+    reader.onload = function (e) {
+
+      var decrypted = CryptoJS.AES.decrypt(e.target.result, 'password').toString(CryptoJS.enc.Latin1);
+
+      if(!/^data:/.test(decrypted)){
+          alert("Invalid pass phrase or file! Please try again.");
+          return false;
+      } else {
+        console.log("Successful decryption", decrypted);
+      }
+
+      // Handle file download here
+      fileDownload(decrypted, file.name.replace('.encrypted',''));
+    }
+
+    xhr.open('GET', file.downloadURL);
+    xhr.send();
+  }
+
   addUserModalToggle(){
     this.setState((prevState) => ({
       addUserModalShow: !prevState.addUserModalShow
@@ -207,9 +284,16 @@ class Groups extends Component {
 
     let createGroupModalClose = () => this.setState({ createGroupModalClose: false });
 
+    console.log('stateFiles', this.state.files);
+
     return (
-      <div className="container">
-        <div className="center-col">
+      <div className="GroupsContainer">
+        <div className="CenterColumn">
+          <CreateGroupForm handleGroupCreate={this.handleGroupCreate} />
+          <GroupCreateModal
+            show={this.state.createUserModalShow}
+            onHide={createGroupModalClose}
+            />
           {
             this.state.loading
             ? <p>Loading...</p>
@@ -217,17 +301,14 @@ class Groups extends Component {
                 <GroupsList
                   groups={this.state.groups}
                   users={this.state.users}
+                  files={this.state.files}
+                  decryptFile={this.decryptFile}
                   deleteMemberFromGroup={this.deleteMemberFromGroup}
                   addUsersToGroup={this.addUsersToGroup}
                   addUserModalToggle={this.addUserModalToggle}
                   addUserModalShow={this.state.addUserModalShow}
                   removeGroup={this.handleGroupRemoval}/>
                 <br/>
-                <CreateGroupForm handleGroupCreate={this.handleGroupCreate} />
-                <GroupCreateModal
-                  show={this.state.createUserModalShow}
-                  onHide={createGroupModalClose}
-                  />
               </div>
           }
         </div>

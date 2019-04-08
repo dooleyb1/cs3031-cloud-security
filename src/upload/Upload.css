@@ -3,23 +3,21 @@
   flex-direction: column;
   flex: 1;
   align-items: flex-start;
-  text-align: left;
-  overflow: hidden;
 }
 
 .Content {
   display: flex;
   flex-direction: row;
+  min-height: 35vh;
   padding-top: 16px;
+  padding-bottom: 16px;
   box-sizing: border-box;
   width: 100%;
 }
 
 .Files {
-  margin-left: 32px;
-  align-items: flex-start;
-  justify-items: flex-start;
   flex: 1;
+  flex-direction: row;
   overflow-y: auto;
 }
 
@@ -29,7 +27,7 @@
   width: 100%;
   align-items: flex-end;
   flex-direction: column;
-  margin-top: 32px;
+  margin-top: 0px;
 }
 
 .Title {
@@ -48,9 +46,7 @@
   flex: 1;
   flex-direction: column;
   justify-content: space-between;
-  height: 50px;
-  padding: 8px;
-  overflow: hidden;
+  height: 20vh;
   box-sizing: border-box;
 }
 

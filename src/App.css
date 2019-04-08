@@ -2,24 +2,20 @@
   text-align: center;
   background-color: rgb(206, 213, 223);
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   font-size: calc(10px + 2vmin);
 }
 
 .Container {
   width: 100%;
+  min-height: 100vh;
   display: flex;
-  justify-content: center;
-  align-items: center;
   flex-direction: column;
+  align-items: center;
 }
 
 .Cloud-Icon {
   height: 100px;
-  width: 200  px;
+  width: 200px;
 }
 
 .SignOutButton {
@@ -33,7 +29,8 @@
 .Card {
   background-color: white;
   padding: 32px;
-  width: 40%;
+  width: 60%;
+  min-height: 60vh;
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;

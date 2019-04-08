@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 
-import { Accordion, Menu, List, Button, Image } from 'semantic-ui-react';
+import { Accordion, Menu, List, Button, Image, Icon, Grid, Popup} from 'semantic-ui-react';
 import AddUserToGroupModal from './AddUserToGroupModal';
 
 class InnerGroup extends Component {
@@ -24,7 +24,9 @@ class InnerGroup extends Component {
 
   render() {
 
-    const { activeIndex } = this.state
+    const { activeIndex } = this.state;
+
+    console.log('propfiles', this.props.files);
 
     const MembersList = (
       <List divided verticalAlign='top'>
@@ -44,15 +46,24 @@ class InnerGroup extends Component {
     )
 
     const FilesList = (
-      <ul>
-        <li>File 1</li>
-        <li>File 2</li>
-      </ul>
+      <Grid columns={2} divided>
+        {this.props.files[this.props.groupID].map((file, i) => {
+          return(
+            <Grid.Row>
+              <Grid.Column>
+                <a download={`${file.name}`} href={`${file.downloadURL}`} className='file-link'>{file.name}</a>
+              </Grid.Column>
+              <Grid.Column>
+                <Popup trigger={<Button size='sm' icon='unlock' onClick={() => this.props.decryptFile(file)}/>} content='Decrypt File' />
+              </Grid.Column>
+            </Grid.Row>
+          )
+        })}
+      </Grid>
     )
 
     const style = {
-      marginTop: 15,
-      minWidth: 5,
+      marginTop: 20,
     }
 
     return (
@@ -78,7 +89,7 @@ class InnerGroup extends Component {
           <Accordion.Content active={activeIndex === 1} content={FilesList} />
           </Menu.Item>
         </Accordion>
-        <button type="button" style={style} onClick={() => this.props.deleteGroup(this.props.groupID)}>Delete Group</button>
+        <Button type="button" style={style} onClick={() => this.props.deleteGroup(this.props.groupID)} negative>Delete Group</Button>
         <AddUserToGroupModal
           addUsersToGroup={this.props.addUsersToGroup}
           group={this.props.groupID}

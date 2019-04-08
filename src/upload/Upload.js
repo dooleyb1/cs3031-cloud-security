@@ -3,6 +3,8 @@ import "./Upload.css";
 
 import Dropzone from "../dropzone/Dropzone";
 import Progress from "../progress/Progress";
+import UploadGroupSelectModal from './UploadGroupSelectModal';
+import Button from 'react-bootstrap/Button';
 
 import * as firebase from 'firebase/app';
 import 'firebase/storage';
@@ -15,9 +17,13 @@ class Upload extends Component {
     super(props);
     this.state = {
       files: [],
+      encryptedFiles: [],
+      groups: [],
+      selectedGroupsForUpload: [],
       uploading: false,
       uploadProgress: {},
-      successfullUploaded: false
+      successfullUploaded: false,
+      groupSelectModalShow: false,
     };
 
     this.onFilesAdded = this.onFilesAdded.bind(this);
@@ -25,7 +31,51 @@ class Upload extends Component {
     this.sendRequest = this.sendRequest.bind(this);
     this.renderActions = this.renderActions.bind(this);
     this.encrypt = this.encrypt.bind(this);
-    this.decrypt = this.decrypt.bind(this);
+    this.encryptFiles = this.encryptFiles.bind(this);
+    this.handleGroupsSelection = this.handleGroupsSelection.bind(this);
+    this.toggleGroupSelectModal = this.toggleGroupSelectModal.bind(this);
+    this.fetchGroups = this.fetchGroups.bind(this);
+  }
+
+  componentDidMount(){
+    // Fetch groups
+    this.fetchGroups();
+  }
+
+  fetchGroups(){
+
+    // Set state to loading
+    this.setState({
+      loading: true
+    })
+
+    const db = firebase.firestore();
+
+    // Create a reference to the groups collection
+    var groupsRef = db.collection("groups");
+    var myGroups = [];
+
+    // Create a query against the collection.
+    groupsRef.get()
+    .then((snapShot) => {
+      snapShot.docs.forEach((group) => {
+
+        // Extract data for given group
+        var groupData = group.data();
+
+        myGroups.push({
+          "id": groupData.id,
+          "group_name": groupData.group_name,
+          "members": groupData.members
+        });
+      })
+
+      this.setState({
+        groups: myGroups,
+        loading: false
+      })
+
+    }).catch((error) => console.log(error.message));
   }
 
   async encrypt(file){
@@ -41,55 +91,50 @@ class Upload extends Component {
     });
   }
 
-  async decrypt(file){
-    const reader = new FileReader();
+  async encryptFiles(files){
 
-    reader.onload = function (e) {
+      for(let i=0; i<files.length; i++){
 
-      var decrypted = CryptoJS.AES.decrypt(e.target.result, 'password').toString(CryptoJS.enc.Latin1);
+        // Encrypt each file one at a time
+        console.log('Encrypting file', files[i]);
+        const encryptedFile = await this.encrypt(files[i]);
+        console.log('Encrypted file', encryptedFile);
 
-      if(!/^data:/.test(decrypted)){
-          alert("Invalid pass phrase or file! Please try again.");
-          return false;
+        // Create new object to house file
+        var encryptedFileData = {
+          name: files[0].name,
+          encryptionData: encryptedFile
+        };
+
+        // Update state with new encrypted file
+        this.setState(prevState => ({
+          encryptedFiles: prevState.encryptedFiles.concat(encryptedFileData)
+        }));
       }
-
-      // Handle file download here
-      let a = document.createElement('a');
-      a.href = decrypted;
-      a.download = file.name.replace('.encrypted','');
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }
-
-    reader.readAsText(file);
   }
 
-  async onFilesAdded(files) {
+  async onFilesAdded(files){
 
-    // Encrypt each file 
-    this.encrypt(files[0])
-    .then((encryptedFile) => {
-
-      // Create new object to house file
-      var encryptedFileData = {
-        name: files[0].name,
-        encryptionData: encryptedFile
-      };
-
-      // Update state with new encrypted file
+    // Add each file to the state
+    files.forEach((file) => {
       this.setState(prevState => ({
-        files: prevState.files.concat(encryptedFileData)
+        files: prevState.files.concat(file)
       }));
-    })
+    });
   }
 
   async uploadFiles() {
     this.setState({ uploadProgress: {}, uploading: true });
     const promises = [];
 
-    this.state.files.forEach(file => {
-      promises.push(this.sendRequest(file));
+    console.log('About to encrypt files', this.state.files);
+    // First, encrypt all files
+    await this.encryptFiles(this.state.files);
+
+    console.log('Finished encrypting files', this.state.encryptedFiles);
+
+    this.state.encryptedFiles.forEach(file => {
+      promises.push(this.sendRequest(file, this.state.selectedGroupsForUpload));
     });
 
     try {
@@ -101,7 +146,7 @@ class Upload extends Component {
     }
   }
 
-  sendRequest(file) {
+  sendRequest(file, groupsSelected) {
     return new Promise((resolve, reject) => {
 
       var storageRef = firebase.storage().ref();
@@ -109,6 +154,8 @@ class Upload extends Component {
       // Upload dataURL of encrypted file
       storageRef.child('files/' + file.name + '.encrypted').putString(file.encryptionData, 'data_url')
       .then((snapshot) => {
+
+        console.log('Successfully uploaded', file.name);
 
         // Handle successful upload states
         const copy = { ...this.state.uploadProgress };
@@ -121,7 +168,7 @@ class Upload extends Component {
           // Keep a record of file location in database
           const db = firebase.firestore();
 
-          // Create a reference to the files collection
+          // Create a reference to the file in files and selected groups collection
           var filesRef = db.collection("files");
 
           // Add metadata for new file
@@ -131,8 +178,22 @@ class Upload extends Component {
             downloadURL: downloadURL,
             isEncrypted: true,
           })
+          .then((fileRef) => {
 
-          resolve(snapshot);
+            var groupsRef = db.collection("groups");
+
+            // For each group selected, insert reference to file
+            groupsSelected.forEach((group) => {
+              groupsRef.doc(group.id).update({
+                files: firebase.firestore.FieldValue.arrayUnion(fileRef)
+              })
+            });
+
+            resolve(snapshot);
+          })
+          .catch((error) => {
+            console.error("Error adding document: ", error);
+          });
         });
 
       })
@@ -169,24 +230,43 @@ class Upload extends Component {
   renderActions() {
     if (this.state.successfullUploaded) {
       return (
-        <button
+        <Button
           onClick={() =>
-            this.setState({ files: [], successfullUploaded: false })
+            this.setState({
+              files: [],
+              encryptedFiles: [],
+              selectedGroupsForUpload: [],
+              successfullUploaded: false
+            })
           }
         >
           Clear
-        </button>
+        </Button>
       );
     } else {
       return (
-        <button
+        <Button
           disabled={this.state.files.length < 0 || this.state.uploading}
-          onClick={this.uploadFiles}
+          onClick={this.toggleGroupSelectModal}
         >
           Upload
-        </button>
+        </Button>
       );
     }
+  }
+
+  toggleGroupSelectModal(){
+    this.setState((prevState) => ({
+      groupSelectModalShow: !prevState.groupSelectModalShow
+    }));
+  }
+
+  handleGroupsSelection(selectedGroups){
+    this.setState({selectedGroupsForUpload: selectedGroups});
+    this.toggleGroupSelectModal();
+
+    // Upload files
+    this.uploadFiles();
   }
 
   render() {
@@ -211,6 +291,12 @@ class Upload extends Component {
                 );
               })}
             </div>
+            <UploadGroupSelectModal
+              show={this.state.groupSelectModalShow}
+              onHide={this.toggleGroupSelectModal}
+              groups={this.state.groups}
+              handleGroupsSelection={this.handleGroupsSelection}
+              />
           </div>
           <div className="Actions">{this.renderActions()}</div>
         </div>

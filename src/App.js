@@ -11,6 +11,8 @@ import Decrypt from "./decrypt/Decrypt";
 import SignIn from "./sign-in/SignIn";
 import ButtonBar from "./button-bar/ButtonBar";
 
+import Button from 'react-bootstrap/Button';
+
 import withFirebaseAuth from 'react-with-firebase-auth';
 import * as firebase from 'firebase/app';
 import 'firebase/auth';
@@ -129,7 +131,7 @@ class App extends Component {
                   {showFiles && <Files/>}
                   {showDecrypt && <Decrypt/>}
               </div>
-              <button className="SignOutButton" onClick={signOut}>Sign Out</button>
+              <Button className="SignOutButton" onClick={signOut}>Sign Out</Button>
             </div>
           : <SignIn signInFunction={signInWithGoogle}/>
         }

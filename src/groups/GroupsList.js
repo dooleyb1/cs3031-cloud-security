@@ -45,6 +45,8 @@ class GroupsList extends Component {
         const groupInnerDropDown = (
           <InnerGroup
             users={this.props.users}
+            files={this.props.files}
+            decryptFile={this.props.decryptFile}
             deleteGroup={this.removeGroup}
             deleteMemberFromGroup={this.deleteMemberFromGroup}
             addUsersToGroup={this.addUsersToGroup}
