@@ -49,6 +49,7 @@ class GroupsList extends Component {
             decryptFile={this.props.decryptFile}
             deleteGroup={this.removeGroup}
             deleteMemberFromGroup={this.deleteMemberFromGroup}
+            deleteFileFromGroup={this.props.deleteFileFromGroup}
             addUsersToGroup={this.addUsersToGroup}
             members={group.members}
             groupID={group.id}

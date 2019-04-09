@@ -10,6 +10,7 @@ import * as firebase from 'firebase/app';
 import 'firebase/storage';
 import 'firebase/firestore';
 
+var Crypto = require("crypto");
 var CryptoJS = require("crypto-js");
 
 class Upload extends Component {
@@ -83,8 +84,25 @@ class Upload extends Component {
       const reader = new FileReader();
 
       reader.onload = (e) => {
-        var encrypted = CryptoJS.AES.encrypt(e.target.result, 'password');
-        resolve('data:application/octet-stream,' + encrypted);
+
+        // Extract file data from FileReader
+        var file = e.target.result;
+
+        // Generate random hash using date and random string
+        var current_date = (new Date()).valueOf().toString();
+        var random = Math.random().toString();
+        var key = Crypto.createHash('sha1').update(current_date + random).digest('hex');
+
+        // Encrypt file data using key
+        var encrypted = CryptoJS.AES.encrypt(file, key);
+
+        // Return file-key pair
+        var fileKeyPair = {
+          file: 'data:application/octet-stream,' + encrypted,
+          key: key
+        }
+
+        resolve(fileKeyPair);
       };
 
       reader.readAsDataURL(file);
@@ -103,7 +121,8 @@ class Upload extends Component {
         // Create new object to house file
         var encryptedFileData = {
           name: files[0].name,
-          encryptionData: encryptedFile
+          encryptionData: encryptedFile.file,
+          key: encryptedFile.key
         };
 
         // Update state with new encrypted file
@@ -177,6 +196,7 @@ class Upload extends Component {
             location: 'files/' + file.name + '.encrypted',
             downloadURL: downloadURL,
             isEncrypted: true,
+            key: file.key
           })
           .then((fileRef) => {
 

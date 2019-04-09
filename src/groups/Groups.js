@@ -26,6 +26,7 @@ class Groups extends Component {
     this.handleGroupRemoval = this.handleGroupRemoval.bind(this);
     this.addUsersToGroup = this.addUsersToGroup.bind(this);
     this.deleteMemberFromGroup = this.deleteMemberFromGroup.bind(this);
+    this.deleteFileFromGroup = this.deleteFileFromGroup.bind(this);
     this.fetchGroups = this.fetchGroups.bind(this);
     this.fetchUsers = this.fetchUsers.bind(this);
     this.deleteGroup = this.deleteGroup.bind(this);
@@ -181,6 +182,7 @@ class Groups extends Component {
     var newGroup = {
       "group_name": group_name,
       "members": [],
+      "files": [],
     }
 
     // Push new group to firestore
@@ -220,7 +222,10 @@ class Groups extends Component {
 
     // Close modal and fetch updated grouo
     this.setState({ addUserModalShow: false });
-    this.fetchGroups();
+    this.fetchGroups()
+    .then(() => {
+      this.setState({loading: false})
+    })
   }
 
   deleteMemberFromGroup(memberToDelete, group){
@@ -232,7 +237,10 @@ class Groups extends Component {
       members: firebase.firestore.FieldValue.arrayRemove(memberToDelete)
     })
     .then((snapshot) => {
-      this.fetchGroups();
+      this.fetchGroups()
+      .then(() => {
+        this.setState({loading: false});
+      })
     })
     .catch((error) => {
       console.error('Error removing user,', memberToDelete, 'from group', group);
@@ -240,38 +248,42 @@ class Groups extends Component {
   }
 
   async decryptFile(file){
-    console.log('Decrypting file', file);
 
+    // Create FileReader and XMLHttpRequest objects
     var xhr = new XMLHttpRequest();
     var reader = new FileReader();
 
+    // Download encrypted file
     xhr.responseType = 'blob';
+    xhr.open('GET', file.downloadURL);
+    xhr.send();
 
     // XHR Callback
     xhr.onload = function(event) {
-      var blob = xhr.response;
-      console.log(blob);
-      reader.readAsText(blob);
+      reader.readAsText(xhr.response);
     };
 
     // Reader callback
     reader.onload = function (e) {
 
-      var decrypted = CryptoJS.AES.decrypt(e.target.result, 'password').toString(CryptoJS.enc.Latin1);
+      // Decrypt file using key
+      var decrypted = CryptoJS.AES.decrypt(e.target.result, file.key).toString(CryptoJS.enc.Latin1);
 
+      // Ensure file is not corrupt
       if(!/^data:/.test(decrypted)){
-          alert("Invalid pass phrase or file! Please try again.");
-          return false;
+        alert("Invalid pass phrase or file! Please try again.");
+        return false;
       } else {
         console.log("Successful decryption", decrypted);
       }
 
-      // Handle file download here
+      // Handle decrypted file download here
       fileDownload(decrypted, file.name.replace('.encrypted',''));
     }
+  }
 
-    xhr.open('GET', file.downloadURL);
-    xhr.send();
+  deleteFileFromGroup(file, group){
+    console.log('Deleting file', file, 'from group', group);
   }
 
   addUserModalToggle(){
@@ -304,6 +316,7 @@ class Groups extends Component {
                   files={this.state.files}
                   decryptFile={this.decryptFile}
                   deleteMemberFromGroup={this.deleteMemberFromGroup}
+                  deleteFileFromGroup={this.deleteFileFromGroup}
                   addUsersToGroup={this.addUsersToGroup}
                   addUserModalToggle={this.addUserModalToggle}
                   addUserModalShow={this.state.addUserModalShow}

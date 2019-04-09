@@ -55,6 +55,7 @@ class InnerGroup extends Component {
               </Grid.Column>
               <Grid.Column>
                 <Popup trigger={<Button size='sm' icon='unlock' onClick={() => this.props.decryptFile(file)}/>} content='Decrypt File' />
+                <Button onClick={() => this.props.deleteFileFromGroup(file, this.props.groupID)} size='tiny' negative>X</Button>
               </Grid.Column>
             </Grid.Row>
           )
